@@ -1,6 +1,6 @@
 import telebot
 import config
-from new_user import make_user
+from use_db import make_user
 
 bot = telebot.TeleBot(config.TOKEN)
 

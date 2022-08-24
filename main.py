@@ -27,8 +27,9 @@ def make_act(message):
 
 
 def find_material(message):
-    if get_book(message.text):
-        bot.send_message(message.chat.id, "Найдена")
+    result = get_book(message.text)
+    if result is not None:
+        bot.send_message(message.chat.id, result)
     else:
         bot.send_message(message.chat.id, "Отсутствует")
 
@@ -46,7 +47,8 @@ def report_material(message):
 @bot.message_handler(commands=['find'])
 def find_handler(message):
     name = message.text[5:]
-    fin
+    find_material(name)
+
 
 
 @bot.message_handler(commands=['check'])

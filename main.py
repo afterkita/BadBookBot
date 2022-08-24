@@ -1,6 +1,7 @@
 import telebot
 import config
 from use_db import make_user, get_book, get_books,get_my_books
+from create_report import make_template_report
 
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
@@ -47,8 +48,16 @@ def check_material(message):
     # запрос
 
 
-def report_material(message):
-    bot.send_message(message.chat.id, message.text)
+def make_report(message):
+    w = next(users[message.chat.id][0])
+    users[message.chat.id][1].append(message.text)
+    if w == '':
+        users[message.chat.id][1].append(message.chat.id)
+        make_template_report(*users[message.chat.id][1])
+        # formirovanie akta
+        return
+    else:
+        bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_report)
 
 
 @bot.message_handler(commands=['find'])
@@ -71,8 +80,8 @@ def check_handler(message):
 
 @bot.message_handler(commands=['report'])
 def report_handler(message):
-
-    bot.send_message(message.chat.id, message.text)
+    users[message.chat.id] = [config.act_dialog_report(), []]
+    bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)
 
 
 @bot.message_handler(commands=['help'])
@@ -101,8 +110,8 @@ def work(message):
                          reply_markup=organization_markup)
     elif message.text == "Личное пользование":
         person_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-        find_button = telebot.types.KeyboardButton("Проверка материала на наличие в реестре запрещённых материалов")
-        report_button = telebot.types.KeyboardButton("Отправить жалобу на материал")
+        find_button = telebot.types.KeyboardButton("1)Проверка материала на наличие в реестре запрещённых материалов")
+        report_button = telebot.types.KeyboardButton("2)Отправить жалобу на материал")
         person_markup.add(find_button, report_button)
         bot.send_message(message.chat.id,
                          "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
@@ -115,9 +124,8 @@ def work(message):
         users[message.chat.id] = [config.act_dialog(), []]
         bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
     elif message.text == "2)Отправить жалобу на материал":
-        bot.send_message(message.chat.id, "пишите вашу проблему")
-        # берёт описание проблемы
-        bot.register_next_step_handler(message, report_material)
+        users[message.chat.id] = [config.act_dialog_report(), []]
+        bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)
     else:
         bot.send_message(message.chat.id, "Непонятная команда /help")
 

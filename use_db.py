@@ -44,10 +44,10 @@ def get_book(title: str):
             )
             name = cur.fetchall()
             if name:
-                return True
+                return title
             else:
-                return False
+                return None
         else:
-            return False
+            return None
     except Exception:
-        return False
+        return None

@@ -45,8 +45,8 @@ def report_material(message):
 
 @bot.message_handler(commands=['find'])
 def find_handler(message):
-    name = message.text.split()
-    bot.send_message(message.chat.id, message.text)
+    name = message.text[5:]
+    fin
 
 
 @bot.message_handler(commands=['check'])

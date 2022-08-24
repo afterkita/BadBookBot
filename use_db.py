@@ -59,8 +59,15 @@ def get_books():
         cur.execute(
             "SELECT name FROM book_data"
         )
-        names = set( [i[0] for i in cur.fetchall()] )
+        names = set([i[0] for i in cur.fetchall()])
         return names
 
     except Exception:
         return set()
+
+
+def get_my_books(file_path: str):
+    with open(file_path, "r") as file:
+        text = file.read().split()
+        file.close()
+        return set(text)

@@ -4,7 +4,7 @@ from use_db import make_user
 from use_db import get_book
 
 bot = telebot.TeleBot(config.TOKEN)
-
+users = {}
 
 @bot.message_handler(commands=['start'])
 def start_dialog(message):
@@ -22,8 +22,17 @@ def start_dialog(message):
                      reply_markup=markup)
 
 
+
 def make_act(message):
-    pass
+    w = next(users[message.chat.id][0])
+    users[message.chat.id][1].append(message.text)
+    if w == '':
+        users[message.chat.id][1].append(message.chat.id)
+        print(users[message.chat.id][1])
+        # formirovanie akta
+        return
+    else:
+        bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_act)
 
 
 def find_material(message):
@@ -56,6 +65,9 @@ def find_handler(message):
 @bot.message_handler(commands=['check'])
 def check_handler(message):
     bot.send_message(message.chat.id, message.text)
+    # проведена проверка и вызов функции формировании акта
+
+    bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id])), make_act)
 
 
 @bot.message_handler(commands=['report'])
@@ -70,14 +82,12 @@ def work(message):
         find_button = telebot.types.KeyboardButton("1)Проверка материала на наличие в реестре запрещённых материалов")
         check_button = telebot.types.KeyboardButton(
             "2)Проверка списка материалов в реестре на наличие запрещённой литературы")
-        make_act_button = telebot.types.KeyboardButton("3)Составление акта")
 
-        organization_markup.add(find_button, check_button, make_act_button)
+        organization_markup.add(find_button, check_button)
         bot.send_message(message.chat.id,
                          "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
                          "name]\n2) "
-                         "Проверка списка материалов в реестре на наличие запрещённой литературы - /check"
-                         "\n3)Составление акта",
+                         "Проверка списка материалов в реестре на наличие запрещённой литературы - /check",
                          reply_markup=organization_markup)
     elif message.text == "Личное пользование":
         person_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -92,11 +102,8 @@ def work(message):
         bot.send_message(message.chat.id, "Отправьте название")
         bot.register_next_step_handler(message, find_material)
     elif message.text == "2)Проверка списка материалов в реестре на наличие запрещённой литературы":
-        bot.send_message(message.chat.id, "Отправьте название")
-        bot.register_next_step_handler(message, check_material)
-    elif message.text == "3)Составление акта":
-
-        bot.register_next_step_handler(message, make_act)
+        users[message.chat.id] = [config.act_dialog(), []]
+        bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
     elif message.text == "2)Отправить жалобу на материал":
         bot.send_message(message.chat.id, "пишите вашу проблему")
         # берёт описание проблемы

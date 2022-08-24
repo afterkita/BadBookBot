@@ -7,6 +7,7 @@ from use_db import get_books
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
 
+
 @bot.message_handler(commands=['start'])
 def start_dialog(message):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -74,10 +75,15 @@ def check_handler(message):
 def report_handler(message):
     bot.send_message(message.chat.id, message.text)
 
+
 @bot.message_handler(commands=['help'])
 def help_handler(message):
+    bot.send_message(message.chat.id,
+                     "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
+                     "name]\n2) "
+                     "Проверка списка материалов в реестре на наличие запрещённой литературы - /check"
+                     "\n3) Отправить жалобу на материал - /report ")
 
-    bot.send_message(message.chat.id, message.text)
 
 @bot.message_handler(content_types=["text"])
 def work(message):
@@ -101,7 +107,7 @@ def work(message):
         person_markup.add(find_button, report_button)
         bot.send_message(message.chat.id,
                          "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
-                         "name]\n2)Отправить жалобу на материал - /report [name]",
+                         "name]\n2)Отправить жалобу на материал - /report",
                          reply_markup=person_markup)
     elif message.text == "1)Проверка материала на наличие в реестре запрещённых материалов":
         bot.send_message(message.chat.id, "Отправьте название")

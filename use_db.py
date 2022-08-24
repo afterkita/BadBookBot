@@ -27,5 +27,26 @@ def make_user(id, name):
         con.close()
 
 
+
 def get_book(title: str):
     global con
+    try:
+        cur = con.cursor()
+
+        cur.execute(
+            "SELECT id FROM book_data WHERE name='{}'".format(str(title).lower())
+        )
+        id = cur.fetchall()
+        if id:
+
+            cur.execute(
+                "SELECT name FROM raw_book_data WHERE id='{}'".format(str(id)[0])
+            )
+            if cur.fetchall():
+                return True
+            else:
+                return False
+        else:
+            return False
+    except Exception:
+        return False

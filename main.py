@@ -1,6 +1,7 @@
 import telebot
 import config
 from use_db import make_user
+from use_db import get_book
 
 bot = telebot.TeleBot(config.TOKEN)
 
@@ -26,8 +27,11 @@ def make_act(message):
 
 
 def find_material(message):
-    bot.send_message(message.chat.id, message.text)
-    # запрос
+    if get_book(message.text):
+        bot.send_message(message.chat.id, "Найдена")
+    else:
+        bot.send_message(message.chat.id, "Отсутствует")
+
 
 
 def check_material(message):
@@ -41,6 +45,7 @@ def report_material(message):
 
 @bot.message_handler(commands=['find'])
 def find_handler(message):
+    name = message.text.split()
     bot.send_message(message.chat.id, message.text)
 
 

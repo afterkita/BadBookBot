@@ -1,8 +1,7 @@
 import telebot
 import config
+from new_user import make_user
 
-# import sqlite3
-# from sqlite3 import Error
 bot = telebot.TeleBot(config.TOKEN)
 
 
@@ -12,6 +11,8 @@ def start_dialog(message):
     organization_button = telebot.types.KeyboardButton('Организация')
     user_button = telebot.types.KeyboardButton('Личное пользование')
     markup.add(organization_button, user_button)
+
+    make_user(message.chat.id, message.from_user.username)
 
     bot.send_message(message.chat.id,
                      'Привет, я телеграм-бот Имя, который проверяет различные материалы на наличие их в регистре экстремистских материалов МЮ РФ')

@@ -2,6 +2,7 @@ import telebot
 import config
 from use_db import make_user
 from use_db import get_book
+from use_db import get_books
 
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
@@ -20,7 +21,6 @@ def start_dialog(message):
     bot.send_message(message.chat.id,
                      'Если вы собираетесь использовать для отслеживания запрещённых книг в своей библиотеке, то нажмите Организация, иначе нажмите Личное пользование ',
                      reply_markup=markup)
-
 
 
 def make_act(message):
@@ -74,10 +74,15 @@ def check_handler(message):
 def report_handler(message):
     bot.send_message(message.chat.id, message.text)
 
+@bot.message_handler(commands=['help'])
+def help_handler(message):
+
+    bot.send_message(message.chat.id, message.text)
 
 @bot.message_handler(content_types=["text"])
 def work(message):
     if message.text == "Организация":
+
         organization_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
         find_button = telebot.types.KeyboardButton("1)Проверка материала на наличие в реестре запрещённых материалов")
         check_button = telebot.types.KeyboardButton(

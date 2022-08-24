@@ -27,7 +27,6 @@ def make_user(id, name):
         con.close()
 
 
-
 def get_book(title: str):
     global con
     try:
@@ -50,3 +49,18 @@ def get_book(title: str):
             return None
     except Exception:
         return None
+
+
+def get_books():
+    global con
+    try:
+        cur = con.cursor()
+
+        cur.execute(
+            "SELECT name FROM book_data"
+        )
+        names = set( [i[0] for i in cur.fetchall()] )
+        return names
+
+    except Exception:
+        return set()

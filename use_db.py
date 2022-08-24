@@ -42,7 +42,8 @@ def get_book(title: str):
             cur.execute(
                 "SELECT name FROM raw_book_data WHERE id='{}'".format(str(id)[0])
             )
-            if cur.fetchall():
+            name = cur.fetchall()
+            if name:
                 return True
             else:
                 return False

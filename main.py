@@ -34,7 +34,6 @@ def find_material(message):
         bot.send_message(message.chat.id, "Отсутствует")
 
 
-
 def check_material(message):
     bot.send_message(message.chat.id, "Отправьте файл(список)")
     # запрос
@@ -46,9 +45,12 @@ def report_material(message):
 
 @bot.message_handler(commands=['find'])
 def find_handler(message):
-    name = message.text[5:]
-    find_material(name)
-
+    name = message.text[6:]
+    result = get_book(name)
+    if result is not None:
+        bot.send_message(message.chat.id, result)
+    else:
+        bot.send_message(message.chat.id, "Отсутствует")
 
 
 @bot.message_handler(commands=['check'])

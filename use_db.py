@@ -65,6 +65,19 @@ def get_books():
     except Exception:
         return set()
 
+def get_users():
+    global con
+
+    try:
+        cur = con.cursor()
+
+        cur.execute("SELECT id FROM users")
+
+        return [i[0] for i in cur.fetchall()]
+
+    except Exception as e:
+        print(e)
+
 
 def get_my_books(file_path: str):
     with open(file_path, "r", encoding='UTF-8') as file:
@@ -72,3 +85,5 @@ def get_my_books(file_path: str):
         file.close()
         return set([i.lower() for i in text])
 
+
+print(get_book('жить хочется!..'))

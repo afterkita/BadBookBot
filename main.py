@@ -7,6 +7,9 @@ bot = telebot.TeleBot(config.TOKEN)
 users = {}
 
 
+BAD_BOOKS = get_books()
+
+
 @bot.message_handler(commands=['start'])
 def start_dialog(message):
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -28,11 +31,34 @@ def make_act(message):
     users[message.chat.id][1].append(message.text)
     if w == '':
         users[message.chat.id][1].append(message.chat.id)
-        print(users[message.chat.id][1])
+        make_template(*users[message.chat.id][1])
         # formirovanie akta
         return
     else:
         bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_act)
+
+
+def get_doc(message):
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        src = message.document.file_name
+        with open(src, 'wb') as new_file:
+            new_file.write(downloaded_file)
+            new_file.close()
+
+        my_books = get_my_books(src)
+
+        bad_books_in_my_collection = list(BAD_BOOKS & my_books)
+
+        if bad_books_in_my_collection:
+            users[message.chat.id][1].append(bad_books_in_my_collection)
+
+            bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
+        else:
+            bot.send_message(message.chat.id, "Совпадения не обнаружены!")
+    except Exception as e:
+        bot.reply_to(message, e)
 
 
 def find_material(message):
@@ -72,10 +98,10 @@ def find_handler(message):
 
 @bot.message_handler(commands=['check'])
 def check_handler(message):
-    bot.send_message(message.chat.id, message.text)
+    users[message.chat.id] = [config.act_dialog(), []]
     # проведена проверка и вызов функции формировании акта
 
-    bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id])), make_act)
+    bot.register_next_step_handler(bot.send_message(message.chat.id, "Пришлите мне файл с вашей библиотекой"), get_doc)
 
 
 @bot.message_handler(commands=['report'])
@@ -121,8 +147,7 @@ def work(message):
         bot.send_message(message.chat.id, "Отправьте название")
         bot.register_next_step_handler(message, find_material)
     elif message.text == "2)Проверка списка материалов в реестре на наличие запрещённой литературы":
-        users[message.chat.id] = [config.act_dialog(), []]
-        bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
+        check_handler(message)
     elif message.text == "2)Отправить жалобу на материал":
         users[message.chat.id] = [config.act_dialog_report(), []]
         bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)

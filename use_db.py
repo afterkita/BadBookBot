@@ -40,11 +40,11 @@ def get_book(title: str):
             cur.execute(
                 "SELECT name FROM raw_book_data WHERE id='{}'".format(id[0][0])
             )
-            name = cur.fetchall()
+            name = cur.fetchall()[0][0]
+            print(name)
             if name:
                 return name
-            else:
-                return None
+            return None
         else:
             return None
     except Exception:
@@ -67,7 +67,7 @@ def get_books():
 
 
 def get_my_books(file_path: str):
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding='UTF-8') as file:
         text = file.read().split()
         file.close()
         return set(text)

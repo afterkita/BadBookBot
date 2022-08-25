@@ -4,20 +4,12 @@ import config
 from use_db import make_user, get_book, get_books, get_my_books, get_users
 from create_report import make_template_report
 from create_act import make_template
-from update_db import update_db
-from multiprocessing import *
-import time
 
-import psycopg2
+import sqlite3
 
 
-con = psycopg2.connect(
-    database="d7n40s85iqs755",
-    user="ktbrujggxtqcwa",
-    password="3506d8f2610207a197f74994b13821ba004f2ebd8eb71b7db56a4b14b83c838a",
-    host="ec2-99-81-16-126.eu-west-1.compute.amazonaws.com",
-    port="5432"
-)
+con = sqlite3.connect('database.db', check_same_thread=False)
+cur = con.cursor()
 
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
@@ -34,21 +26,6 @@ defense_button = telebot.types.KeyboardButton("Защита прав")
 MARCUP.add(find_button, check_button, report_button, info_button, education_button, defense_button)
 
 EmptyMarcup = telebot.types.ReplyKeyboardMarkup()
-
-
-def proc_start():
-    p_to_start = Process(target=start_schedule, args=(id,))
-    p_to_start.start()
-    return p_to_start
-
-
-def start_schedule(id):
-    while True:
-        status = update_db(con)
-        if status:
-            for i in get_users(con):
-                bot.send_message(i, "Реестр обновился, проведите анализ библиотеки!")
-        time.sleep(60 * 60 * 24)
 
 
 @bot.message_handler(commands=['start'])
@@ -77,7 +54,7 @@ def act_choose(message):
                                                         reply_markup=telebot.types.ReplyKeyboardRemove()), get_doc)
     elif message.text.split()[0].lower() == "да":
         users[message.chat.id][1].append(message.chat.id)
-        src = make_template(*users[message.chat.id][1])
+        src = make_template(*users[message.chat.id][1], con)
 
         with open(src, 'rb') as f:
             bot.send_message(message.chat.id,
@@ -364,7 +341,6 @@ def work(message):
 
 if __name__ == '__main__':
     while True:
-        pr = proc_start()
         try:
             bot.polling(none_stop=True)
         except Exception:

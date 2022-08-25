@@ -7,12 +7,9 @@ def make_user(id, name, con):
         )
 
         con.commit()
-        con.close()
 
     except Exception:
         con.commit()
-        con.close()
-
 
 
 def get_book(title: str, con):
@@ -21,6 +18,7 @@ def get_book(title: str, con):
         cur.execute(
             "SELECT name FROM raw_book_data"
         )
+        con.commit()
         name = [i[0] for i in cur.fetchall() if title.lower() in i[0].lower()]
         if name:
             return name[0]
@@ -37,6 +35,8 @@ def get_books(con):
         cur.execute(
             "SELECT name FROM book_data"
         )
+        con.commit()
+
         names = set([i[0] for i in cur.fetchall()])
         return names
 
@@ -48,6 +48,8 @@ def get_users(con):
         cur = con.cursor()
 
         cur.execute("SELECT id FROM users")
+        con.commit()
+
 
         return [i[0] for i in cur.fetchall()]
 

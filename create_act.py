@@ -4,7 +4,7 @@ from datetime import date
 from use_db import get_book
 
 
-def make_template(book_list, dir_name, name1, name2, name3, id):
+def make_template(book_list, dir_name, name1, name2, name3, id, con):
     doc = DocxTemplate("act.docx")
     context = {'ФИО_руководителя': dir_name, 'ФИО1': name1, 'ФИО2': name2, 'ФИО3': name3, 'дата': date.today(),
                'количество': str(len(book_list))}
@@ -16,7 +16,7 @@ def make_template(book_list, dir_name, name1, name2, name3, id):
 
     for j in range(len(book_list)):
         cell = table.cell(j, 0)
-        cell.text = get_book(book_list[j])
+        cell.text = get_book(book_list[j], con)
 
     doc.save(f"act-final{str(id)}.docx")
     return f"act-final{str(id)}.docx"

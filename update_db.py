@@ -1,6 +1,5 @@
 import requests
 import csv
-import psycopg2
 
 
 def reform(text: list):
@@ -20,7 +19,7 @@ headers = {
 session = requests.Session()
 
 
-def update_db():
+def update_db(con):
     html = session.get('https://minjust.gov.ru/uploaded/files/exportfsm.csv', headers=headers)
 
     with open("p.csv", "wb") as code:
@@ -31,13 +30,6 @@ def update_db():
         reader = csv.reader(f, delimiter=';', quotechar='"')
         last_id = list(reader)[-1][0]
 
-        con = psycopg2.connect(
-            database="d7n40s85iqs755",
-            user="ktbrujggxtqcwa",
-            password="3506d8f2610207a197f74994b13821ba004f2ebd8eb71b7db56a4b14b83c838a",
-            host="ec2-99-81-16-126.eu-west-1.compute.amazonaws.com",
-            port="5432"
-        )
         cur = con.cursor()
 
         cur.execute('SELECT id FROM raw_book_data')

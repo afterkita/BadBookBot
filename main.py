@@ -8,10 +8,21 @@ from update_db import update_db
 from multiprocessing import *
 import time
 
+import psycopg2
+
+
+con = psycopg2.connect(
+    database="d7n40s85iqs755",
+    user="ktbrujggxtqcwa",
+    password="3506d8f2610207a197f74994b13821ba004f2ebd8eb71b7db56a4b14b83c838a",
+    host="ec2-99-81-16-126.eu-west-1.compute.amazonaws.com",
+    port="5432"
+)
+
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
 
-BAD_BOOKS = get_books()
+BAD_BOOKS = get_books(con)
 
 MARCUP = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 find_button = telebot.types.KeyboardButton("Поиск")
@@ -33,9 +44,9 @@ def proc_start():
 
 def start_schedule(id):
     while True:
-        status = update_db()
+        status = update_db(con)
         if status:
-            for i in get_users():
+            for i in get_users(con):
                 bot.send_message(i, "Реестр обновился, проведите анализ библиотеки!")
         time.sleep(60 * 60 * 24)
 
@@ -47,8 +58,6 @@ def start_dialog(message):
     user_button = telebot.types.KeyboardButton('Личное пользование')
     markup.add(organization_button, user_button)
 
-    make_user(message.chat.id, message.from_user.username)
-
     bot.send_message(message.chat.id,
                      'Привет, я телеграм-бот BadBookBot, который проверяет различные материалы на наличие их в Федеральном реестре экстремистских материалов',
                      reply_markup=markup)
@@ -56,6 +65,8 @@ def start_dialog(message):
                      'Для мониторинга наличия экстремистских книг в фонде библиотеки - нажмите Организация.\nДля '
                      'поиска информации в реестре в личных или коммерческих целях - нажмите Личное пользование',
                      reply_markup=markup)
+    make_user(message.chat.id, message.from_user.username, con)
+
 
 
 def act_choose(message):
@@ -74,7 +85,6 @@ def act_choose(message):
             bot.send_document(message.chat.id, document=f, reply_markup=MARCUP)
             f.close()
             os.remove(src)
-        return
     else:
         bot.register_next_step_handler(bot.send_message(message.chat.id, "Выберите Да или Нет"), act_choose)
 
@@ -236,7 +246,7 @@ def defense(message):
 
 
 def find_material(message):
-    result = get_book(message.text.strip())
+    result = get_book(message.text.strip(), con)
     if result:
         bot.send_message(message.chat.id, result, reply_markup=MARCUP)
     else:
@@ -257,7 +267,8 @@ def find_handler(message):
         bot.register_next_step_handler(message, find_material)
         return
     name = message.text.strip()[6:]
-    result = get_book(name)
+    print(name)
+    result = get_book(name, con)
     if result:
         bot.send_message(message.chat.id, result, reply_markup=MARCUP)
     else:

@@ -42,6 +42,7 @@ def act_choose(message):
         users[message.chat.id][1].append(message.chat.id)
         src = make_template(*users[message.chat.id][1])
 
+
         with open(src, 'rb') as f:
             bot.send_document(message.chat.id, document=f,reply_markup=MARCUP)
             f.close()

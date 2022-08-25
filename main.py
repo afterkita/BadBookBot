@@ -91,8 +91,13 @@ def make_report(message):
         bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_report)
 
 
+
 @bot.message_handler(commands=['find'])
 def find_handler(message):
+    if len(message.text.split())==1:
+        bot.send_message(message.chat.id,"Отправьте название")
+        bot.register_next_step_handler(message,find_material)
+        return
     name = message.text[6:]
     result = get_book(name)
     if result is not None:
@@ -121,7 +126,8 @@ def help_handler(message):
                      "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
                      "name]\n2) "
                      "Проверка списка материалов в реестре на наличие запрещённой литературы - /check"
-                     "\n3) Отправить жалобу на материал - /report ")
+                     "\n3) Отправить жалобу на материал - /report "
+                     "")
 
 
 @bot.message_handler(content_types=["text"])

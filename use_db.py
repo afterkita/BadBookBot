@@ -1,4 +1,5 @@
 import psycopg2
+import requests
 
 con = psycopg2.connect(
     database="d7n40s85iqs755",
@@ -41,7 +42,6 @@ def get_book(title: str):
                 "SELECT name FROM raw_book_data WHERE id='{}'".format(id[0][0])
             )
             name = cur.fetchall()[0][0]
-            print(name)
             if name:
                 return name
             return None
@@ -71,3 +71,4 @@ def get_my_books(file_path: str):
         text = file.read().split()
         file.close()
         return set([i.lower() for i in text])
+

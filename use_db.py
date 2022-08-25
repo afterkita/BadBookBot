@@ -34,7 +34,7 @@ def get_book(title: str):
         cur = con.cursor()
 
         cur.execute(
-            "SELECT id FROM book_data WHERE name='{}'".format(str(title).lower())
+            "SELECT id FROM book_data WHERE name='{}'".format(title.lower())
         )
         id = cur.fetchall()
         if id:

@@ -9,7 +9,7 @@ bot = telebot.TeleBot(config.TOKEN)
 users = {}
 
 BAD_BOOKS = get_books()
-
+MARCUP = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 
 @bot.message_handler(commands=['start'])
 def start_dialog(message):
@@ -21,16 +21,15 @@ def start_dialog(message):
     make_user(message.chat.id, message.from_user.username)
 
     bot.send_message(message.chat.id,
-                     'Привет, я телеграм-бот Имя, который проверяет различные материалы на наличие их в регистре экстремистских материалов МЮ РФ')
+                     'Привет, я телеграм-бот BadBookBot, который проверяет различные материалы на наличие их в регистре экстремистских материалов МЮ РФ')
     bot.send_message(message.chat.id,
-                     'Если вы собираетесь использовать для отслеживания запрещённых книг в своей библиотеке, то нажмите Организация, иначе нажмите Личное пользование ',
-                     reply_markup=markup)
+                     'Если вы собираетесь использовать для отслеживания запрещённых книг в своей библиотеке, то нажмите Организация, иначе нажмите Личное пользование ')
 
 def act_choose(message):
-    if message.text == "Нет":
+    if message.text.split()[0].lower() == "нет":
         users[message.chat.id] = [config.act_dialog(), []]
         bot.register_next_step_handler(bot.send_message(message.chat.id, "Пришлите мне файл с вашей библиотекой"), get_doc)
-    elif message.text == "Да":
+    elif message.text.split()[0].lower() == "да":
         users[message.chat.id][1].append(message.chat.id)
         src = make_template(*users[message.chat.id][1])
 
@@ -39,6 +38,8 @@ def act_choose(message):
             f.close()
             os.remove(src)
         return
+    else:
+        bot.register_next_step_handler(bot.send_message(message.chat.id,"Выберите Да или Нет"),act_choose)
 
 
 def make_act(message):
@@ -55,7 +56,7 @@ def make_act(message):
         bot.send_message(message.chat.id, "\nФИО руководителя - {}\nФИО первого сотрудника - {}\nФИО второго "
                                           "сотрудника - {}\nФИО третьего сотрудника - {}".format(users[message.chat.id][1][1],users[message.chat.id][1][2],users[message.chat.id][1][3],users[message.chat.id][1][4]))
 
-        bot.send_message(message.chat.id, "Все правильно?", reply_markup=markup)
+        bot.send_message(message.chat.id, "Все правильно?")
         bot.register_next_step_handler(message, act_choose)
 
     else:
@@ -76,10 +77,11 @@ def get_doc(message):
         bad_books_in_my_collection = list(BAD_BOOKS & my_books)
 
         if bad_books_in_my_collection:
+            bot.send_message(message.chat.id,"Найдены совпадения. Начинаю составлять акт.")
             users[message.chat.id][1].append(bad_books_in_my_collection)
 
             bot.register_next_step_handler(
-                bot.send_message(message.chat.id, next(users[message.chat.id][0]), reply_markup=None), make_act)
+                bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
         else:
             bot.send_message(message.chat.id, "Совпадения не обнаружены!")
     except Exception:
@@ -95,11 +97,11 @@ def find_material(message):
 
 
 def report_choose(message):
-    if message.text == "Нет":
+    if message.text.split()[0].lower() == "нет":
         bot.send_message(message.chat.id, "Начнём заново")
         users[message.chat.id] = [config.act_dialog_report(), []]
         bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)
-    elif message.text == "Да":
+    elif message.text.split()[0].lower() == "да":
         users[message.chat.id][1].append(message.chat.id)
         src = make_template_report(*users[message.chat.id][1])
 
@@ -108,6 +110,8 @@ def report_choose(message):
             f.close()
             os.remove(src)
         return
+    else:
+        bot.register_next_step_handler(bot.send_message(message.chat.id, "Выберите Да или Нет"), report_choose)
 
 
 def make_report(message):

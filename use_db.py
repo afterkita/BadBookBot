@@ -70,4 +70,4 @@ def get_my_books(file_path: str):
     with open(file_path, "r", encoding='UTF-8') as file:
         text = file.read().split()
         file.close()
-        return set(text)
+        return set([i.lower() for i in text])

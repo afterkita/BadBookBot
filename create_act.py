@@ -15,10 +15,9 @@ def make_template(book_list, dir_name, name1, name2, name3, id):
     table = doc.add_table(rows=1, cols=len(book_list))
 
     for j in range(len(book_list)):
-        print(book_list[j])
         cell = table.cell(j, 0)
         cell.text = get_book(book_list[j])
-        print('make cell')
 
     doc.save(f"act-final{str(id)}.docx")
+    return f"act-final{str(id)}.docx"
 

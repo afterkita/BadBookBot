@@ -1,3 +1,4 @@
+import os
 import telebot
 import config
 from use_db import make_user, get_book, get_books, get_my_books
@@ -31,8 +32,12 @@ def make_act(message):
     users[message.chat.id][1].append(message.text)
     if w == '':
         users[message.chat.id][1].append(message.chat.id)
-        make_template(*users[message.chat.id][1])
-        # formirovanie akta
+        src = make_template(*users[message.chat.id][1])
+
+        with open(src, 'rb') as f:
+            bot.send_document(message.chat.id, document=f)
+            f.close()
+            os.remove(src)
         return
     else:
         bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_act)
@@ -48,13 +53,14 @@ def get_doc(message):
             new_file.close()
 
         my_books = get_my_books(src)
-
+        os.remove(src)
         bad_books_in_my_collection = list(BAD_BOOKS & my_books)
 
         if bad_books_in_my_collection:
             users[message.chat.id][1].append(bad_books_in_my_collection)
 
-            bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
+            bot.register_next_step_handler(
+                bot.send_message(message.chat.id, next(users[message.chat.id][0]), reply_markup=None), make_act)
         else:
             bot.send_message(message.chat.id, "Совпадения не обнаружены!")
     except Exception as e:
@@ -69,18 +75,17 @@ def find_material(message):
         bot.send_message(message.chat.id, "Отсутствует")
 
 
-def check_material(message):
-    bot.send_message(message.chat.id, "Отправьте файл(список)")
-    # запрос
-
-
 def make_report(message):
     w = next(users[message.chat.id][0])
     users[message.chat.id][1].append(message.text)
     if w == '':
         users[message.chat.id][1].append(message.chat.id)
-        make_template_report(*users[message.chat.id][1])
-        # formirovanie akta
+        src = make_template_report(*users[message.chat.id][1])
+
+        with open(src, 'rb') as f:
+            bot.send_document(message.chat.id, document=f)
+            f.close()
+            os.remove(src)
         return
     else:
         bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_report)

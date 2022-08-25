@@ -1,9 +1,12 @@
 import os
 import telebot
 import config
-from use_db import make_user, get_book, get_books, get_my_books
+from use_db import make_user, get_book, get_books, get_my_books, get_users
 from create_report import make_template_report
 from create_act import make_template
+from update_db import update_db
+from multiprocessing import *
+import time
 
 bot = telebot.TeleBot(config.TOKEN)
 users = {}
@@ -19,6 +22,21 @@ education_button = telebot.types.KeyboardButton("Просвещение")
 MARCUP.add(find_button, check_button, report_button, info_button)
 
 EmptyMarcup = telebot.types.ReplyKeyboardMarkup()
+
+
+def proc_start():
+    p_to_start = Process(target=start_schedule, args=(id,))
+    p_to_start.start()
+    return p_to_start
+
+
+def start_schedule(id):
+    while True:
+        status = update_db()
+        if status:
+            for i in get_users():
+                bot.send_message(i, "Реестр обновился, проведите анализ библиотеки!")
+        time.sleep(60 * 60 * 24 * 7)
 
 
 @bot.message_handler(commands=['start'])
@@ -234,8 +252,10 @@ def work(message):
                          reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
-while True:
-    try:
-        bot.polling(none_stop=True)
-    except Exception:
-        pass
+if __name__ == '__main__':
+    while True:
+        pr = proc_start()
+        try:
+            bot.polling(none_stop=True)
+        except Exception:
+            pass

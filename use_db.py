@@ -84,6 +84,3 @@ def get_my_books(file_path: str):
         text = file.read().split()
         file.close()
         return set([i.lower() for i in text])
-
-
-print(get_book('жить хочется!..'))

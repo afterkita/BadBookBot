@@ -9,7 +9,16 @@ bot = telebot.TeleBot(config.TOKEN)
 users = {}
 
 BAD_BOOKS = get_books()
+
 MARCUP = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+find_button = telebot.types.KeyboardButton("Поиск")
+check_button = telebot.types.KeyboardButton("Анализ")
+report_button = telebot.types.KeyboardButton("Жалоба")
+info_button = telebot.types.KeyboardButton("Инфо")
+education_button = telebot.types.KeyboardButton("Просвещение")
+MARCUP.add(find_button,check_button,report_button,info_button)
+
+EmptyMarcup = telebot.types.ReplyKeyboardMarkup()
 
 @bot.message_handler(commands=['start'])
 def start_dialog(message):
@@ -21,9 +30,9 @@ def start_dialog(message):
     make_user(message.chat.id, message.from_user.username)
 
     bot.send_message(message.chat.id,
-                     'Привет, я телеграм-бот BadBookBot, который проверяет различные материалы на наличие их в регистре экстремистских материалов МЮ РФ')
+                     'Привет, я телеграм-бот BadBookBot, который проверяет различные материалы на наличие их в регистре экстремистских материалов МЮ РФ', reply_markup=markup)
     bot.send_message(message.chat.id,
-                     'Если вы собираетесь использовать для отслеживания запрещённых книг в своей библиотеке, то нажмите Организация, иначе нажмите Личное пользование ')
+                     'Если вы собираетесь использовать для отслеживания запрещённых книг в своей библиотеке, то нажмите Организация, иначе нажмите Личное пользование ',reply_markup=markup)
 
 def act_choose(message):
     if message.text.split()[0].lower() == "нет":
@@ -34,7 +43,7 @@ def act_choose(message):
         src = make_template(*users[message.chat.id][1])
 
         with open(src, 'rb') as f:
-            bot.send_document(message.chat.id, document=f)
+            bot.send_document(message.chat.id, document=f,reply_markup=MARCUP)
             f.close()
             os.remove(src)
         return
@@ -62,6 +71,8 @@ def make_act(message):
     else:
         bot.register_next_step_handler(bot.send_message(message.chat.id, w), make_act)
 
+def get_education_information(message):
+    pass
 
 def get_doc(message):
     try:
@@ -83,17 +94,17 @@ def get_doc(message):
             bot.register_next_step_handler(
                 bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_act)
         else:
-            bot.send_message(message.chat.id, "Совпадения не обнаружены!")
+            bot.send_message(message.chat.id, "Совпадения не обнаружены!",reply_markup=MARCUP)
     except Exception:
-        bot.send_message(message.from_user.id,"Не получилось открыть данный файл")
+        bot.send_message(message.from_user.id,"Не получилось открыть данный файл",reply_markup=MARCUP)
 
 
 def find_material(message):
-    result = get_book(message.text)
-    if result is not None:
-        bot.send_message(message.chat.id, result)
+    result = get_book(message.text.strip())
+    if result:
+        bot.send_message(message.chat.id, result,reply_markup=MARCUP)
     else:
-        bot.send_message(message.chat.id, "Отсутствует")
+        bot.send_message(message.chat.id, "Отсутствует",reply_markup=MARCUP)
 
 
 def report_choose(message):
@@ -107,11 +118,12 @@ def report_choose(message):
 
         with open(src, 'rb') as f:
             bot.send_document(message.chat.id, document=f)
+            bot.send_message(message.chat.id,"",reply_markup=MARCUP)
             f.close()
             os.remove(src)
         return
     else:
-        bot.register_next_step_handler(bot.send_message(message.chat.id, "Выберите Да или Нет"), report_choose)
+        bot.register_next_step_handler(bot.send_message(message.chat.id, "Выберите: Да или Нет"), report_choose)
 
 
 def make_report(message):
@@ -141,12 +153,12 @@ def find_handler(message):
         bot.send_message(message.chat.id, "Отправьте название")
         bot.register_next_step_handler(message, find_material)
         return
-    name = message.text[6:]
+    name = message.text.strip()[6:]
     result = get_book(name)
-    if result is not None:
-        bot.send_message(message.chat.id, result)
+    if result:
+        bot.send_message(message.chat.id, result,reply_markup=MARCUP)
     else:
-        bot.send_message(message.chat.id, "Отсутствует")
+        bot.send_message(message.chat.id, "Отсутствует",reply_markup=MARCUP)
 
 
 @bot.message_handler(commands=['check'])
@@ -154,7 +166,7 @@ def check_handler(message):
     users[message.chat.id] = [config.act_dialog(), []]
     # проведена проверка и вызов функции формировании акта
 
-    bot.register_next_step_handler(bot.send_message(message.chat.id, "Пришлите мне файл с вашей библиотекой"), get_doc)
+    bot.register_next_step_handler(bot.send_message(message.chat.id, "Пришлите файл с вашей библиотекой",reply_markup=telebot.types.ReplyKeyboardRemove()), get_doc)
 
 
 @bot.message_handler(commands=['report'])
@@ -162,6 +174,13 @@ def report_handler(message):
     users[message.chat.id] = [config.act_dialog_report(), []]
     bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)
 
+@bot.message_handler(commands=['info'])
+def information_bot(message):
+    pass
+
+@bot.message_handler(commands=['education'])
+def education():
+    pass
 
 @bot.message_handler(commands=['help'])
 def help_handler(message):
@@ -170,44 +189,34 @@ def help_handler(message):
                      "name]\n2) "
                      "Проверка списка материалов в реестре на наличие запрещённой литературы - /check"
                      "\n3) Отправить жалобу на материал - /report "
-                     "\n4) Получить информацию о хранении запрещённых материалов, о руководстве для библиотекарей - "
-                     "/info ")
+                     "\n4) Получить информацию о боте - /info ",reply_markup=MARCUP)
 
 
 @bot.message_handler(content_types=["text"])
 def work(message):
     if message.text == "Организация":
-
-        organization_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-        find_button = telebot.types.KeyboardButton("1)Проверка материала на наличие в реестре запрещённых материалов")
-        check_button = telebot.types.KeyboardButton(
-            "2)Проверка списка материалов в реестре на наличие запрещённой литературы")
-
-        organization_markup.add(find_button, check_button)
         bot.send_message(message.chat.id,
                          "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
                          "name]\n2) "
                          "Проверка списка материалов в реестре на наличие запрещённой литературы - /check",
-                         reply_markup=organization_markup)
+                         reply_markup=MARCUP)
     elif message.text == "Личное пользование":
-        person_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-        find_button = telebot.types.KeyboardButton("1)Проверка материала на наличие в реестре запрещённых материалов")
-        report_button = telebot.types.KeyboardButton("2)Отправить жалобу на материал")
-        person_markup.add(find_button, report_button)
         bot.send_message(message.chat.id,
                          "Список команд:\n1)Проверка материала на наличие в реестре запрещённых материалов - /find ["
                          "name]\n2)Отправить жалобу на материал - /report",
-                         reply_markup=person_markup)
-    elif message.text == "1)Проверка материала на наличие в реестре запрещённых материалов":
-        bot.send_message(message.chat.id, "Отправьте название")
+                         reply_markup=MARCUP)
+    elif message.text == "Поиск":
+        bot.send_message(message.chat.id, "Отправьте название",reply_markup=telebot.types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, find_material)
-    elif message.text == "2)Проверка списка материалов в реестре на наличие запрещённой литературы":
+    elif message.text == "Анализ":
         check_handler(message)
-    elif message.text == "2)Отправить жалобу на материал":
+    elif message.text == "Жалоба":
         users[message.chat.id] = [config.act_dialog_report(), []]
-        bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0])), make_report)
+        bot.register_next_step_handler(bot.send_message(message.chat.id, next(users[message.chat.id][0]),reply_markup=telebot.types.ReplyKeyboardRemove()), make_report)
+    elif message.text == "Информация":
+        get_education_information(message)
     else:
-        bot.send_message(message.chat.id, "Непонятная команда /help")
+        bot.send_message(message.chat.id, "Непонятная команда. Используйте /help",reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
 while True:

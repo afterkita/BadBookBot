@@ -1,5 +1,4 @@
 import psycopg2
-import requests
 
 con = psycopg2.connect(
     database="d7n40s85iqs755",

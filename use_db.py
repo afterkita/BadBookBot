@@ -32,21 +32,14 @@ def get_book(title: str):
     global con
     try:
         cur = con.cursor()
-
         cur.execute(
-            "SELECT id FROM book_data WHERE name='{}'".format(title.lower())
+            "SELECT name FROM raw_book_data"
         )
-        id = cur.fetchall()
-        if id:
-            cur.execute(
-                "SELECT name FROM raw_book_data WHERE id='{}'".format(id[0][0])
-            )
-            name = cur.fetchall()[0][0]
-            if name:
-                return name
-            return None
-        else:
-            return None
+        name = [i[0] for i in cur.fetchall() if title.lower() in i[0].lower()]
+        if name:
+            return name[0]
+        return None
+
     except Exception:
         return None
 
